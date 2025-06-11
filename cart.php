@@ -67,7 +67,7 @@ $total_price = calculate_total($_SESSION['cart'], $items);
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Shopping Cart - ShopEasy</title>
+<title>Shopping Cart - ShopSphere</title>
 <style>
   /* Use the same CSS as before (cart page styling) */
   @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@600&display=swap');
