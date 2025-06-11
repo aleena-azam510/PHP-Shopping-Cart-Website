@@ -1,37 +1,29 @@
 <?php
 session_start();
 
-// Redirect to login if not logged in
 if (!isset($_SESSION['user'])) {
     header("Location: login.php");
     exit;
 }
 
-// Define 15 items with images
-$items = [
-    1 => ['name' => 'Wireless Headphones', 'price' => 99.99, 'image' => 'https://images.unsplash.com/photo-1511367461989-f85a21fda167?auto=format&fit=crop&w=400&q=80'],
-    2 => ['name' => 'Smartwatch', 'price' => 149.99, 'image' => 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=400&q=80'],
-    3 => ['name' => 'Bluetooth Speaker', 'price' => 79.99, 'image' => 'https://images.unsplash.com/photo-1509395176047-4a66953fd231?auto=format&fit=crop&w=400&q=80'],
-    4 => ['name' => 'E-reader', 'price' => 129.99, 'image' => 'https://images.unsplash.com/photo-1512820790803-83ca734da794?auto=format&fit=crop&w=400&q=80'],
-    5 => ['name' => 'Portable Charger', 'price' => 39.99, 'image' => 'https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&w=400&q=80'],
-    6 => ['name' => 'Camera Lens', 'price' => 199.99, 'image' => 'https://images.unsplash.com/photo-1504384308090-c894fdcc538d?auto=format&fit=crop&w=400&q=80'],
-    7 => ['name' => 'Mechanical Keyboard', 'price' => 89.99, 'image' => 'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?auto=format&fit=crop&w=400&q=80'],
-    8 => ['name' => 'Gaming Mouse', 'price' => 49.99, 'image' => 'images/image-2.jpg'],
-    9 => ['name' => 'VR Headset', 'price' => 299.99, 'image' => 'https://images.unsplash.com/photo-1549924231-f129b911e442?auto=format&fit=crop&w=400&q=80'],
-    10 => ['name' => 'Smart Home Hub', 'price' => 99.99, 'image' => 'https://images.unsplash.com/photo-1568688223145-c0dbf769e11e?auto=format&fit=crop&w=400&q=80'],
-    11 => ['name' => 'Drone', 'price' => 399.99, 'image' => 'https://images.unsplash.com/photo-1500534623283-312aade485b7?auto=format&fit=crop&w=400&q=80'],
-    12 => ['name' => 'Fitness Tracker', 'price' => 59.99, 'image' => 'images/image-2.jpg'],
-    13 => ['name' => 'Laptop Stand', 'price' => 29.99, 'image' => 'images/image-1.jpg'],
-    14 => ['name' => 'Wireless Charger', 'price' => 24.99, 'image' => 'images/image-4.jpg'],
-    15 => ['name' => 'Noise Cancelling Earbuds', 'price' => 129.99, 'image' => 'images/image-5.jpg'],
-];
+require_once 'config.php';
 
-// Initialize cart in session
+// Get items from database
+$items = [];
+$result = $mysqli->query("SELECT * FROM items");
+if ($result) {
+    while ($row = $result->fetch_assoc()) {
+        $items[$row['id']] = $row;
+    }
+    $result->free();
+} else {
+    die("Database query error: " . $mysqli->error);
+}
+
 if (!isset($_SESSION['cart'])) {
     $_SESSION['cart'] = [];
 }
 
-// Handle add to cart post
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_to_cart'])) {
     $item_id = (int)$_POST['item_id'];
     if (isset($items[$item_id])) {
@@ -45,7 +37,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_to_cart'])) {
     exit;
 }
 
-// Handle logout
+// Logout
 if (isset($_GET['action']) && $_GET['action'] === 'logout'){
     session_destroy();
     header("Location: login.php");
@@ -63,6 +55,7 @@ function format_price($price) {
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>Items - Shopping Cart</title>
 <style>
+  /* Include your CSS styles here - same as previous index.php styles */
   @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@600&display=swap');
   :root {
     --color-bg: #fff;
@@ -74,13 +67,11 @@ function format_price($price) {
     --spacing: 1rem;
   }
   * { box-sizing: border-box;}
-  body {
-    margin: 0; font-family: 'Poppins', sans-serif; background: var(--color-bg);
+  body { margin: 0; font-family: 'Poppins', sans-serif; background: var(--color-bg);
     color: var(--color-text); line-height:1.6; min-height:100vh;
     display:flex; flex-direction:column;
   }
-  header {
-    position: sticky; top: 0; background: var(--color-bg); z-index:10;
+  header { position: sticky; top: 0; background: var(--color-bg); z-index:10;
     box-shadow: 0 2px 6px var(--shadow);
   }
   nav {
@@ -148,7 +139,7 @@ function format_price($price) {
   .item-name {
     font-weight: 700; font-size: 1.1rem; color: var(--color-primary);
     margin-bottom: 0.3rem;
-    min-height: 2.8em; /* reserve space for 2 lines */
+    min-height: 2.8em;
   }
   .item-price {
     font-weight: 700; font-size: 1rem; color: var(--color-primary);
@@ -204,4 +195,3 @@ function format_price($price) {
 </main>
 </body>
 </html>
-

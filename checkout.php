@@ -5,23 +5,19 @@ if (!isset($_SESSION['user'])) {
     exit;
 }
 
-$items = [
-    1 => ['name' => 'Wireless Headphones', 'price' => 99.99, 'image' => 'https://images.unsplash.com/photo-1511367461989-f85a21fda167?auto=format&fit=crop&w=400&q=80'],
-    2 => ['name' => 'Smartwatch', 'price' => 149.99, 'image' => 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=400&q=80'],
-    3 => ['name' => 'Bluetooth Speaker', 'price' => 79.99, 'image' => 'https://images.unsplash.com/photo-1509395176047-4a66953fd231?auto=format&fit=crop&w=400&q=80'],
-    4 => ['name' => 'E-reader', 'price' => 129.99, 'image' => 'https://images.unsplash.com/photo-1512820790803-83ca734da794?auto=format&fit=crop&w=400&q=80'],
-    5 => ['name' => 'Portable Charger', 'price' => 39.99, 'image' => 'https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&w=400&q=80'],
-    6 => ['name' => 'Camera Lens', 'price' => 199.99, 'image' => 'https://images.unsplash.com/photo-1504384308090-c894fdcc538d?auto=format&fit=crop&w=400&q=80'],
-    7 => ['name' => 'Mechanical Keyboard', 'price' => 89.99, 'image' => 'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?auto=format&fit=crop&w=400&q=80'],
-    8 => ['name' => 'Gaming Mouse', 'price' => 49.99, 'image' => 'https://images.unsplash.com/photo-1587825140408-fce932d511ab?auto=format&fit=crop&w=400&q=80'],
-    9 => ['name' => 'VR Headset', 'price' => 299.99, 'image' => 'https://images.unsplash.com/photo-1549924231-f129b911e442?auto=format&fit=crop&w=400&q=80'],
-    10 => ['name' => 'Smart Home Hub', 'price' => 99.99, 'image' => 'https://images.unsplash.com/photo-1568688223145-c0dbf769e11e?auto=format&fit=crop&w=400&q=80'],
-    11 => ['name' => 'Drone', 'price' => 399.99, 'image' => 'https://images.unsplash.com/photo-1500534623283-312aade485b7?auto=format&fit=crop&w=400&q=80'],
-    12 => ['name' => 'Fitness Tracker', 'price' => 59.99, 'image' => 'https://images.unsplash.com/photo-1514284004450-c2691a39e4eb?auto=format&fit=crop&w=400&q=80'],
-    13 => ['name' => 'Laptop Stand', 'price' => 29.99, 'image' => 'https://images.unsplash.com/photo-1501425359011-0efddf5c18d0?auto=format&fit=crop&w=400&q=80'],
-    14 => ['name' => 'Wireless Charger', 'price' => 24.99, 'image' => 'https://images.unsplash.com/photo-1512499617640-c2f999d1140e?auto=format&fit=crop&w=400&q=80'],
-    15 => ['name' => 'Noise Cancelling Earbuds', 'price' => 129.99, 'image' => 'https://images.unsplash.com/photo-1517733409091-22b6df1b2b0b?auto=format&fit=crop&w=400&q=80'],
-];
+require_once 'config.php';
+
+// Fetch all items from database
+$items = [];
+$result = $mysqli->query("SELECT * FROM items");
+if ($result) {
+    while ($row = $result->fetch_assoc()) {
+        $items[$row['id']] = $row;
+    }
+    $result->free();
+} else {
+    die("Database query error: " . $mysqli->error);
+}
 
 if (!isset($_SESSION['cart']) || empty($_SESSION['cart'])) {
     header("Location: cart.php");
@@ -46,13 +42,11 @@ $total_price = calculate_total($_SESSION['cart'], $items);
 
 $purchase_complete = false;
 
-// Handle confirm purchase
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['confirm_purchase'])) {
     $purchase_complete = true;
-    $_SESSION['cart'] = []; // Clear cart
+    $_SESSION['cart'] = [];
 }
 
-// Handle logout
 if (isset($_GET['action']) && $_GET['action'] === 'logout'){
     session_destroy();
     header("Location: login.php");
@@ -66,6 +60,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'logout'){
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>Checkout - ShopEasy</title>
 <style>
+  /* Include same styling as previous checkout.php */
   @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@600&display=swap');
   :root {
     --color-bg: #fff;

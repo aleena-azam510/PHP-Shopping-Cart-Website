@@ -1,12 +1,21 @@
 <?php
 session_start();
 
-// Initialize demo users in session
-if (!isset($_SESSION['users'])) {
-    $_SESSION['users'] = [
-        'demo@example.com' => ['password' => 'password123', 'name' => 'Demo User'],
-    ];
-}
+require_once 'config.php';
+
+// Create users table if not exists
+$createUsersTableSQL = <<<SQL
+CREATE TABLE IF NOT EXISTS users (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(255) NOT NULL,
+  email VARCHAR(255) NOT NULL UNIQUE,
+  password VARCHAR(255) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+SQL;
+
+$mysqli->query($createUsersTableSQL);
+
+// Initialize error and success messages
 $errors = [];
 $success = '';
 
@@ -16,37 +25,80 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($action === 'login') {
         $email = strtolower(trim($_POST['email'] ?? ''));
         $password = $_POST['password'] ?? '';
+
         if (!$email || !$password) {
             $errors[] = "Please fill in both email and password.";
-        } elseif (isset($_SESSION['users'][$email]) && $_SESSION['users'][$email]['password'] === $password) {
-            $_SESSION['user'] = [
-                'email' => $email,
-                'name' => $_SESSION['users'][$email]['name'],
-            ];
-            header("Location: index.php");
-            exit;
+        } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            $errors[] = "Invalid email address.";
         } else {
-            $errors[] = "Invalid email or password.";
+            // Fetch user from DB
+            $stmt = $mysqli->prepare("SELECT id, name, password FROM users WHERE email = ?");
+            $stmt->bind_param('s', $email);
+            $stmt->execute();
+            $result = $stmt->get_result();
+
+            if ($user = $result->fetch_assoc()) {
+                // Verify password (hashed)
+                if (password_verify($password, $user['password'])) {
+                    // Login success
+                    $_SESSION['user'] = [
+                        'id' => $user['id'],
+                        'email' => $email,
+                        'name' => $user['name']
+                    ];
+                    $stmt->close();
+                    header("Location: index.php");
+                    exit;
+                } else {
+                    $errors[] = "Incorrect password.";
+                }
+            } else {
+                $errors[] = "User not found.";
+            }
+            $stmt->close();
         }
     } elseif ($action === 'signup') {
         $name = trim($_POST['name'] ?? '');
         $email = strtolower(trim($_POST['email'] ?? ''));
         $password = $_POST['password'] ?? '';
         $password_confirm = $_POST['password_confirm'] ?? '';
+
         if (!$name || !$email || !$password || !$password_confirm) {
             $errors[] = "Please fill in all signup fields.";
         } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
             $errors[] = "Invalid email address.";
         } elseif ($password !== $password_confirm) {
             $errors[] = "Passwords do not match.";
-        } elseif (isset($_SESSION['users'][$email])) {
-            $errors[] = "Email is already registered.";
         } else {
-            $_SESSION['users'][$email] = ['password' => $password, 'name' => $name];
-            $success = "Signup successful! Please login below.";
+            // Check if email already exists
+            $stmt = $mysqli->prepare("SELECT id FROM users WHERE email = ?");
+            $stmt->bind_param('s', $email);
+            $stmt->execute();
+            $stmt->store_result();
+
+            if ($stmt->num_rows > 0) {
+                $errors[] = "Email is already registered.";
+                $stmt->close();
+            } else {
+                $stmt->close();
+
+                // Hash password
+                $password_hash = password_hash($password, PASSWORD_DEFAULT);
+
+                // Insert new user
+                $stmt = $mysqli->prepare("INSERT INTO users (name, email, password) VALUES (?, ?, ?)");
+                $stmt->bind_param('sss', $name, $email, $password_hash);
+                if ($stmt->execute()) {
+                    $success = "Signup successful! Please login below.";
+                } else {
+                    $errors[] = "Database error: Could not register user.";
+                }
+                $stmt->close();
+            }
         }
     }
 }
+
 // Redirect if already logged in
 if (isset($_SESSION['user'])) {
     header("Location: index.php");
