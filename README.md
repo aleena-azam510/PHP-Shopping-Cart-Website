@@ -2,7 +2,30 @@
 ## By Aleena Azam 2k22/CSM/11
 
 ---
-# How Our Shopping Cart Works
+## About This Project
+
+This is a simple shopping cart website built with PHP. It's a basic example of how to create an online store where users can browse products, add them to a cart, and go through a basic checkout process.
+
+## What It Does
+
+* **Shows Products:** Displays a list of items with pictures and prices.
+* **Add to Cart:** Lets people put items they want into a shopping cart.
+* **Manage Cart:** Users can see what's in their cart, change quantities, or remove items.
+* **Simple Checkout:** A basic way to "buy" things (doesn't connect to real payment systems).
+* **Uses a Database:** Stores product information in a MySQL/MariaDB database.
+
+## Technologies Used
+
+* **PHP:** For the website's backend logic.
+* **MySQL/MariaDB:** For storing all the data.
+* **XAMPP:** The software package that runs everything (Apache, PHP, MySQL) on your computer.
+* **HTML, CSS:** For how the website looks and feels.
+
+## License
+
+This project is open-source.
+
+# How This Shopping Cart Works
 
 This website makes online shopping super easy! It has four main pages that all work together:
 
